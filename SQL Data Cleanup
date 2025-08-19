@@ -1,0 +1,62 @@
+WITH customer_churn_cleaned AS (
+    SELECT
+        "Customer ID" AS customer_id,
+        "Gender" AS gender,
+        "Age" AS age,
+        "Married" AS is_married,
+        "Number of Dependents" AS number_of_dependents,
+        "City" AS city,
+        CAST("Zip Code" AS VARCHAR(5)) AS zip_code,
+        "Latitude" AS latitude,
+        "Longitude" AS longitude,
+        "Number of Referrals" AS number_of_referrals,
+        "Tenure in Months" AS tenure_in_months,
+        "Offer" AS offer,
+        "Phone Service" AS has_phone_service,
+        COALESCE("Avg Monthly Long Distance Charges", 0) AS avg_monthly_long_distance_charges,
+        CASE 
+            WHEN "Phone Service" = 'No' THEN 'No Phone Service' 
+            ELSE "Multiple Lines" 
+        END AS multiple_lines,
+        "Internet Service" AS has_internet_service,
+        COALESCE("Internet Type", 'N/A') AS internet_type,
+        COALESCE("Avg Monthly GB Download", 0) AS avg_monthly_gb_download,
+        CASE WHEN "Internet Service" = 'No' THEN 'No Internet Service' ELSE COALESCE("Online Security", 'No') END AS online_security,
+        CASE WHEN "Internet Service" = 'No' THEN 'No Internet Service' ELSE COALESCE("Online Backup", 'No') END AS online_backup,
+        CASE WHEN "Internet Service" = 'No' THEN 'No Internet Service' ELSE COALESCE("Device Protection Plan", 'No') END AS device_protection_plan,
+        CASE WHEN "Internet Service" = 'No' THEN 'No Internet Service' ELSE COALESCE("Premium Tech Support", 'No') END AS premium_tech_support,
+        CASE WHEN "Internet Service" = 'No' THEN 'No Internet Service' ELSE COALESCE("Streaming TV", 'No') END AS streaming_tv,
+        CASE WHEN "Internet Service" = 'No' THEN 'No Internet Service' ELSE COALESCE("Streaming Movies", 'No') END AS streaming_movies,
+        CASE WHEN "Internet Service" = 'No' THEN 'No Internet Service' ELSE COALESCE("Streaming Music", 'No') END AS streaming_music,
+        CASE WHEN "Internet Service" = 'No' THEN 'No Internet Service' ELSE COALESCE("Unlimited Data", 'No') END AS unlimited_data,
+        "Contract" AS contract_type,
+        "Paperless Billing" AS has_paperless_billing,
+        "Payment Method" AS payment_method,
+        ABS("Monthly Charge") AS monthly_charge,
+        COALESCE("Total Charges", ABS("Monthly Charge")) AS total_charges,
+        "Customer Status" AS customer_status,
+        COALESCE("Churn Category", 'N/A') AS churn_category,
+        COALESCE("Churn Reason", 'N/A') AS churn_reason,
+        CASE 
+            WHEN "Customer Status" = 'Churned' THEN 1 
+            ELSE 0 
+        END AS churn_flag,
+        CASE
+            WHEN "Tenure in Months" <= 12 THEN '0-1 Year'
+            WHEN "Tenure in Months" <= 24 THEN '1-2 Years'
+            WHEN "Tenure in Months" <= 60 THEN '2-5 Years'
+            ELSE '5+ Years'
+        END AS tenure_group
+    FROM telecom_customer_churn
+),
+zipcode_population_cleaned AS (
+    SELECT
+        CAST("Zip Code" AS VARCHAR(5)) AS zip_code,
+        "Population" AS population
+    FROM telecom_zipcode_population
+)
+SELECT
+    c.*,
+    p.population
+FROM customer_churn_cleaned c
+LEFT JOIN zipcode_population_cleaned p ON c.zip_code = p.zip_code;
