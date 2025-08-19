@@ -1,5 +1,6 @@
 WITH customer_churn_cleaned AS (
     SELECT
+		--removing spaces and quotations		    	
         "Customer ID" AS customer_id,
         "Gender" AS gender,
         "Age" AS age,
@@ -13,6 +14,7 @@ WITH customer_churn_cleaned AS (
         "Tenure in Months" AS tenure_in_months,
         "Offer" AS offer,
         "Phone Service" AS has_phone_service,
+        --removing blanks
         COALESCE("Avg Monthly Long Distance Charges", 0) AS avg_monthly_long_distance_charges,
         CASE 
             WHEN "Phone Service" = 'No' THEN 'No Phone Service' 
@@ -41,6 +43,7 @@ WITH customer_churn_cleaned AS (
             WHEN "Customer Status" = 'Churned' THEN 1 
             ELSE 0 
         END AS churn_flag,
+        --creating groups for customer tenure
         CASE
             WHEN "Tenure in Months" <= 12 THEN '0-1 Year'
             WHEN "Tenure in Months" <= 24 THEN '1-2 Years'
@@ -58,5 +61,6 @@ zipcode_population_cleaned AS (
 SELECT
     c.*,
     p.population
+--Joining cleaned data together
 FROM customer_churn_cleaned c
 LEFT JOIN zipcode_population_cleaned p ON c.zip_code = p.zip_code;
